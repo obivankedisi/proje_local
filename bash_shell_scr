@@ -1,0 +1,673 @@
+# LINUX BASH SHELL SCRIPTING: TAM KAPSAMLI REHBER KİTAP
+
+Bu kitap, Linux ve Unix tabanlı sistemlerde komut satırı arayüzü ve otomasyon süreçlerinin belkemiği olan "Bash Shell Scripting" konusunu sıfırdan alıp tüm ayrıntıları, teorik altyapısı, tarihçesi, yapılandırması ve pratik örnekleriyle ele alan tam kapsamlı bir kaynaktır.
+
+---
+
+## BÖLÜM 1: LİNUX SHELL VE SHELL SCRIPT NEDİR?
+
+### 1.1 Linux Shell (Kabuk) Nedir?
+Shell, işletim sistemlerinde kullanıcı ile işletim sisteminin çekirdeği (kernel) arasında köprü görevi gören, kullanıcıdan alınan komutları anlayıp çekirdeğe ileten ve sonuçları kullanıcıya döndüren bir arayüzdür. İşletim sisteminin donanımla konuştuğu yer kernel iken, kullanıcının işletim sistemiyle konuştuğu yer shell'dir.
+
+### 1.2 Shell Script Nedir?
+Shell Script, komutların bir kabuk (shell) üzerinde sıralı bir şekilde çalıştırılmasını sağlayan betik dosyalarıdır. Bir shell script genellikle aşağıdaki işlevleri yerine getirir:
+- **Komutların Otomasyonu:** Kullanıcı tarafından sürekli olarak terminale tek tek girilen bir dizi komutu toplu şekilde çalıştırır.
+- **İş Süreçlerini Yönetme:** Dosya işlemleri, sistem kontrolü, kullanıcı girişi ve çıkışı, veri işleme gibi işlemleri otomatikleştirir.
+- **Programlama Mantığı İçerme:** Sadece alt alta yazılmış komutlardan ibaret değildir; döngüler (loops), koşullu ifadeler (if-else), değişkenler (variables) ve fonksiyonlar gibi programlama yapıları içererek karar verme yeteneğine sahiptir.
+
+Shell scriptleri genellikle `.sh` uzantısıyla kaydedilir (zorunlu değildir ancak standarttır) ve işletim sistemi seviyesinde çalıştırılabilirlik izni verilerek yürütülür.
+
+### 1.3 Linux Shell'in Tarihsel Gelişimi
+Shell Scripting'in temelleri, günümüz modern programlamasının atası sayılan eski Unix sistemlerine kadar dayanır.
+
+- **Unix ve Başlangıçlar (1960’lar sonu - 1970’ler):** Shell’in tarihi Unix işletim sistemine dayanır. 1969 yılında Bell Labs’de Dennis Ritchie ve Ken Thompson Unix'i geliştirirken komut satırında kullanıcılarla etkileşim kurmak için **Thompson Shell (sh)** adı verilen çok basit bir kabuk yazdılar.
+- **Bourne Shell (1979):** Unix sistemlerinin popülerleşmesiyle birlikte daha gelişmiş bir kabuk ihtiyacı doğdu. Stephen Bourne, 1979'da AT&T Bell Labs'de **Bourne Shell (sh)** kabuğunu geliştirdi. Bu kabuk bugünkü birçok shell script'in temelini oluşturur. Bourne Shell, programlama yapıları sunarak (döngüler, koşullar, fonksiyonlar vb.) script yazımını kolaylaştırdı.
+- **C Shell (csh) ve Korn Shell (ksh) (1980’ler):** 1980'lerde Unix üzerinde farklı ihtiyaçlara yönelik yeni kabuklar ortaya çıktı. C Shell (csh), C programlama diline benzeyen bir sözdizimi (syntax) sundu ve özellikle programcılar arasında çok popüler oldu. Korn Shell (ksh) ise David Korn tarafından geliştirildi ve Bourne Shell'in yeteneklerini hem performans hem de programlama özellikleri açısından zenginleştirdi.
+- **Bash - Bourne Again Shell (1989):** 1989 yılında Brian Fox tarafından GNU projesi kapsamında geliştirildi. Bash, isminden de anlaşılacağı üzere Bourne Shell'in yerine geçmek (onun yeniden doğmuş hali olmak) üzere tasarlandı. Hem Bourne Shell'in standart yapısını korudu hem de C Shell ve Korn Shell'in en iyi özelliklerini birleştirerek çok güçlü bir kabuk haline geldi. Bugün Linux dağıtımlarının neredeyse tamamında varsayılan (default) shell Bash'tir.
+
+---
+
+## BÖLÜM 2: BASH YAPILANDIRMASI VE KONFİGÜRASYON DOSYALARI
+
+Bash kabuğu her açıldığında ve sistemde bir kullanıcı oturum açtığında belirli ayarları, değişkenleri ve yolları (path) yüklemek için çeşitli konfigürasyon dosyalarına başvurur. Bu dosyalar, global (tüm sistem) ve kullanıcıya özel olarak ikiye ayrılır.
+
+### 2.1 Konfigürasyon Dosyaları Nerededir?
+Bir Bash oturumu açıldığında (Login Shell) veya yeni bir terminal penceresi açıldığında (Non-login Shell) aşağıdaki dosyalar sırasıyla okunur:
+
+**Login Scriptleri (Oturum Açılışında Okunanlar):**
+- `/etc/profile` : Tüm sistemi ve tüm kullanıcıları etkileyen global ayar dosyasıdır.
+- `/etc/profile.d/*` : `/etc/profile` içinden çağrılan, uygulamalara özel alt ayar scriptlerinin bulunduğu dizindir.
+- `~/.profile` veya `~/.bash_profile` : Sadece oturum açan kullanıcıya özel olan, kullanıcının ev (home) dizininde yer alan kişisel profil dosyalarıdır.
+
+**Bash Konfigürasyonu (Her Terminal Açılışında Okunanlar):**
+- `/etc/bashrc` : Tüm kullanıcıları etkileyen global kabuk ayarları.
+- `~/.bashrc` : Kullanıcının kendine özel kabuk ayarları. Sıkça kullanılan alias'lar, PATH eklemeleri ve kabuk fonksiyonları buraya yazılır.
+
+**Çıkış (Logout) Scripti:**
+- `~/.bash_logout` : Kullanıcı terminalden veya oturumdan çıkış yaptığında çalıştırılan scripttir. (Örn: geçici dosyaları silmek, logları temizlemek vb. için kullanılır).
+
+**Sistem Çapında Yeni Kullanıcı Şablonu:**
+- `/etc/skel/.bashrc` : Sisteme yeni bir kullanıcı eklendiğinde (useradd), kullanıcının ev dizinine kopyalanacak olan varsayılan konfigürasyon dosyasıdır. Tüm yeni kullanıcıların ortak ayarlarla gelmesi isteniyorsa bu şablon güncellenir.
+
+### 2.2 Neleri Konfigüre Edebiliriz?
+Konfigürasyon dosyalarında en yaygın yapılan işlemler şunlardır:
+
+**1. Executable Search Path (Komut Arama Yolları):**
+Kullanıcının yazdığı bir komutun hangi dizinlerde aranacağı tanımlanır.
+- Globally: `/etc/profile` dosyasında tanımlanabilir.
+- Per user: `~/.profile` veya `~/.bash_profile` dosyasında `export PATH=$PATH:/yeni/dizin` şeklinde tanımlanır.
+
+**2. Ortam Değişkenleri (Environment Variables):**
+Sistem çapında geçerli olan değişkenlerdir. `export` komutu ile tanımlanarak globalleştirilir. `set -o allexport` ile .profile içine yazılan tüm tanımların otomatik export edilmesi sağlanabilir. `env` komutu kullanılarak o anki sistem değişkenleri görüntülenebilir.
+
+**3. Alias (Kısayollar):**
+`.bashrc` dosyasına eklenerek uzun komutlara kısa adlar verilebilir. Örneğin:
+```bash
+alias ls='ls --color=auto'
+alias ll='ls --color=auto -la'
+```
+*(Tanımlanmış bir kısayolu iptal etmek için `unalias ls` kullanılır.)*
+
+**4. Sistem Fonksiyonları Tanımlama:**
+`.bashrc` dosyasının içine sadece sizin sisteminizde çalışacak özel fonksiyonlar ekleyebilirsiniz. Örneğin, sistem bilgisini hızlıca verecek bir `sysinfo` fonksiyonu:
+```bash
+function sysinfo() {
+    echo -e "\nKernel Bilgisi:" ; uname -a
+    echo -e "\nİşletim Sistemi Versiyonu:" ; cat /etc/os-release
+    echo -e "\nSistem Açık Kalma Süresi (Uptime):" ; uptime
+    echo -e "\nBellek Kullanımı:" ; free -m
+    echo -e "\nDisk Kullanımı:" ; df -h
+}
+```
+Bu tanımı `~/.bashrc` dosyasına ekleyip terminali yeniden başlattıktan sonra, konsola doğrudan `sysinfo` yazarak bu özel komutu çalıştırabilirsiniz.
+
+---
+
+## BÖLÜM 3: SCRİPT OLUŞTURMA VE ÇALIŞTIRMA TEMELLERİ
+
+Bash script yazmak, sistem yöneticileri (SysAdmins) ve DevOps uzmanları için otomasyon süreçlerinin vazgeçilmez bir parçasıdır.
+
+### 3.1 Script'in Yapısı ve Shebang
+Bir bash script'i her zaman "shebang" diye adlandırılan `#!/bin/bash` satırı ile başlamalıdır. İşletim sistemi bu satırı okuyarak, dosyanın içerisindeki kodları hangi yorumlayıcının (interpreter) çalıştıracağını anlar.
+
+```bash
+#!/bin/bash
+# Bu işaret (#) yorum satırı anlamına gelir, kod olarak değerlendirilmez.
+
+MESG="Bu benim ilk mesajım."
+echo $MESG
+```
+
+*Not: Script yazarken `nano`, `vim` gibi terminal metin editörlerini veya `Notepad++`, `VS Code` gibi GUI editörlerini kullanabilirsiniz.*
+
+### 3.2 Temel Script Komutları
+Scriptler içinde terminalde yazdığımız her komutu (ls, pwd, mkdir, echo vb.) kullanabiliriz. Öne çıkan temel script komutları:
+- `echo` : Ekrana metin yazdırmak için kullanılır. `echo -e` parametresi ile özel kaçış karakterleri (Örn: \n ile alt satıra geçme) çalıştırılabilir.
+- `read` : Kullanıcıdan klavye yoluyla girdi alıp bir değişkene kopyalar.
+- `test` : Bir karşılaştırma yapar ve doğru(true) veya yanlış(false) döndürür.
+- `seq` : Belirli bir aralıktaki sayıların listesini üretir (Örn: `seq 1 10`).
+
+### 3.3 Çalıştırma İzinleri ve Yürütme
+Linux'ta oluşturulan bir metin dosyasının varsayılan olarak çalıştırılma izni yoktur. Bu dosyayı terminalden tetikleyebilmek için ona Execute (x) yetkisi vermeliyiz.
+
+1. Terminali açın ve scriptin bulunduğu dizine gidin.
+2. Yetki verin: `chmod +x script_adi.sh`
+3. Çalıştırın: `./script_adi.sh`
+
+*(Burada `./` ifadesi "şu an bulunduğum dizin içindeki" anlamına gelir. Sistem güvenlik gereği, script bulunduğunuz klasörde olsa bile adını doğrudan yazdığınızda çalıştırmaz, illaki `./` ile yol göstermenizi ister. Eğer scriptinizin klasörünü PATH değişkenine eklerseniz, `./` yazmadan da direkt çalıştırabilirsiniz.)*
+
+Alternatif olarak, script'in içinde execute yetkisi olmasa dahi onu doğrudan Bash'e parametre olarak vererek çalıştırabilirsiniz:
+```bash
+bash script_adi.sh
+sh script_adi.sh
+```
+Eğer scriptin çok uzun süreceğini biliyorsanız ve terminali kapatmak/başka işler için kullanmak istiyorsanız, komutun sonuna `&` koyarak onu arka plana atabilirsiniz:
+```bash
+./script_adi.sh &
+```
+
+---
+
+## BÖLÜM 4: DEĞİŞKENLER (VARIABLES)
+
+Değişkenler, scriptler içerisinde değerlerin (sayı, metin, bir komutun çıktısı vb.) saklanmasını ve gerektiğinde tekrar tekrar kullanılmasını sağlayan hafıza birimleridir.
+
+### 4.1 Değişken Tanımlama ve Kullanma
+Shell script'te bir değişken tanımlanırken kural çok katıdır: **Eşittir (=) operatörünün sağında ve solunda kesinlikle boşluk bırakılmaz.**
+
+Bir değişkenin içindeki değeri çağırmak/okumak için isminin başına `$` işareti konulur.
+```bash
+#!/bin/bash
+isim="Ahmet"
+yas=30
+echo "Benim adım $isim ve ben $yas yaşındayım."
+```
+
+### 4.2 Kapsamlarına Göre Değişken Tipleri
+1. **Yerel (Local) Değişkenler:** Sadece oluşturuldukları script'in içinde veya oluşturuldukları bir fonksiyonun içinde yaşarlar. Scriptin veya fonksiyonun çalışması bittiğinde yok olurlar. Fonksiyon içinde `local` kelimesiyle tanımlanırlar.
+2. **Ortam (Environment) Değişkenleri:** Sistem seviyesinde kabuk başlarken veya `export` komutu ile tanımlanmış, sistem genelindeki tüm programların erişebildiği değişkenlerdir (Örn: `$PATH`, `$USER`, `$HOME`).
+```bash
+MYVAR="Yerel değişken"
+export MYENVVAR="Ortam değişkeni"
+echo "Yerel: $MYVAR"
+echo "Global: $MYENVVAR"
+```
+
+### 4.3 Sabit Değer (Constant) Tanımlama
+Değişkenlerin sonradan kazara değiştirilmesini engellemek için `readonly` anahtar kelimesi kullanılır.
+```bash
+readonly PI=3.14
+PI=3.15 # Bu satır çalıştırıldığında hata verecektir, çünkü PI sabittir.
+```
+
+### 4.4 Komut Çıktısını Değişkene Atama (Command Substitution)
+Bir Linux komutunun çalıştıktan sonra ürettiği sonucu ekrana basmak yerine bir değişkene almak script dünyasının en kritik özelliklerindendir. İki yöntemle yapılır:
+1. Ters tırnak (backtick) `` ` `` işareti ile: `tarih=\`date\``
+2. Dolar-Parantez `$()` yapısı ile (Modern ve önerilen): `tarih=$(date)`
+
+```bash
+#!/bin/bash
+su_anki_dizin=$(pwd)
+TARIH=$(date)
+echo "Bugünün tarihi: $TARIH"
+echo "Şu anki dizin: $su_anki_dizin"
+```
+
+### 4.5 Matematiksel İşlemler
+Shell script değişkenler arasında temel matematiksel işlemler yapmak için `expr` komutunu veya daha pratik olan çift parantez `$(( ))` yapısını kullanır.
+```bash
+a=5
+b=3
+toplam=$((a + b))
+echo "Toplam: $toplam"
+```
+
+### 4.6 Diziler (Arrays)
+Bash scriptlerde bir değişken tek bir değer tutabileceği gibi birden fazla değeri indeksli şekilde de tutabilir. İndeksler her zaman 0'dan başlar.
+```bash
+MYARRAY=("elma" "armut" "portakal")
+echo "İlk eleman: ${MYARRAY[0]}"
+echo "İkinci eleman: ${MYARRAY[1]}"
+echo "Tüm dizi: ${MYARRAY[@]}"
+```
+
+### 4.7 Ön Tanımlı ve Özel Değişkenler
+Sistem tarafından otomatik oluşturulan ve kodlamada hayat kurtaran değişkenlerdir.
+
+- `$0` : O an çalışan scriptin bizzat kendi adını döndürür. (Örn: ./script.sh yazdıysanız çıktı `./script.sh` olur).
+- `$1, $2, ..., $N` : Script'e terminalden gönderilen argümanlardır. Örn: `./script.sh Ahmet Veli` şeklinde çalıştırırsanız `$1` "Ahmet", `$2` "Veli" olur.
+- `$#` : Script'e çalıştırılırken kaç tane argüman gönderildiğinin sayısını verir.
+- `$@` : Gönderilen tüm argümanları bir dizi gibi ayrı ayrı listeler. Döngülerde çok işe yarar.
+- `$*` : Gönderilen tüm argümanları aralarında boşluk olan tek bir string metin olarak bütün halde döndürür.
+- `$?` : **(Çok Önemli)** Son çalıştırılan komutun Çıkış Durumu (Exit Status). Komut başarıyla çalıştıysa `0`, başarısız olduysa veya hata aldıysa `1` ile `255` arası bir hata kodu döner.
+- `$$` : Çalışmakta olan script'in PID (Process ID - İşlem Kimliği) numarasını döndürür.
+
+---
+
+## BÖLÜM 5: KULLANICIDAN GİRDİ ALMAK (READ KOMUTU)
+
+Shell scriptlerini dinamik ve etkileşimli hale getiren komut `read` komutudur. Terminal ekranını beklemeye alır ve kullanıcının klavyeden girdiği veriyi alarak belirtilen değişkene kaydeder.
+
+### 5.1 Temel read Kullanımı
+```bash
+echo "Adınızı girin:"
+read isim
+echo "Merhaba, $isim!"
+```
+
+### 5.2 Birden Fazla Değişkene Veri Atama
+Kullanıcı boşluk bırakarak birden fazla kelime yazarsa, `read` bunları sırasıyla değişkenlere atayabilir.
+```bash
+echo "Adınızı ve soyadınızı girin:"
+read isim soyisim
+echo "Adınız: $isim, Soyadınız: $soyisim"
+```
+*(Eğer kullanıcı 3 kelime girerse, ilk kelime `isim`e, kalan iki kelime bütün olarak `soyisim` değişkenine atanır.)*
+
+### 5.3 İstem (Prompt) Mesajı Gösterme (-p)
+`echo` ile mesajı ayrı bir satırda yazdırmak yerine `read -p` ile aynı satırda girdi isteyebiliriz.
+```bash
+read -p "Adınızı girin: " isim
+echo "Merhaba, $isim!"
+```
+
+### 5.4 Veriyi Gizlemek (Şifre Girişi) (-s)
+Kullanıcının girdiği metnin terminalde görünmemesi için (özellikle şifre gibi hassas verilerde) `-s` (silent) parametresi eklenir.
+```bash
+read -s -p "Şifrenizi girin: " sifre
+echo
+echo "Şifre alındı!"
+```
+*(Gizli modda enter tuşuna basıldığında terminal alt satıra geçmeyeceği için fazladan boş bir `echo` kullanılması format açısından önerilir.)*
+
+### 5.5 Varsayılan (Default) Girdi Kullanma
+Eğer kullanıcı hiçbir şey yazmadan doğrudan Enter'a basarsa, değişkene varsayılan bir değer atanmasını sağlayabiliriz.
+```bash
+read -p "Adınızı girin: " kullanici_girdisi
+isim=${kullanici_girdisi:-"Anonim"}
+echo "Merhaba, $isim!"
+```
+*(Yukarıdaki örnekte `kullanici_girdisi` boş ise, `isim` değişkenine "Anonim" yazılacaktır.)*
+
+### 5.6 Girdileri Doğrudan Diziye Atama (-a)
+Kullanıcının girdiği kelimelerin listesini boşluklardan parçalayarak bir diziye atmak için `-a` (array) kullanılır.
+```bash
+read -p "Sevdiğiniz renkleri boşlukla girin: " -a renkler
+echo "İlk sevdiğiniz renk: ${renkler[0]}"
+```
+
+### 5.7 Bir Dosyadan Veri Okuma (while read Modu)
+`read` sadece klavyeden değil, bir metin dosyasından da satır satır veri okumak için çok yaygın kullanılır.
+```bash
+while read satir
+do
+    echo "Okunan satır: $satir"
+done < dosya.txt
+```
+
+---
+
+## BÖLÜM 6: KOŞULLU İFADELER VE MANTIKSAL KONTROLLER (if/else)
+
+Sistem yönetim scriptlerinde her şey düz bir çizgide ilerlemez. Çoğu zaman bir şeylerin var olup olmadığını, başarılı olup olmadığını kontrol etmemiz ve ona göre programın akışını değiştirmemiz gerekir.
+
+### 6.1 Temel if Yapısı
+Shell script'te `if` yapısı koşulu kontrol eder, eğer doğruysa (true) `then` ile `fi` arasındaki komutları çalıştırır.
+```bash
+if [ koşul ]; then
+    # Koşul doğruysa burası çalışır
+fi
+```
+Alternatif senaryoları katmak için `else` (değilse) ve `elif` (başka bir koşulsa) kullanılır.
+```bash
+if [ koşul1 ]; then
+    # Koşul1 doğruysa...
+elif [ koşul2 ]; then
+    # Koşul2 doğruysa...
+else
+    # Hiçbir koşul doğru değilse...
+fi
+```
+
+### 6.2 Karşılaştırma Operatörleri
+Shell script (Bash), diğer modern dillerdeki gibi `<` veya `>` işaretlerini standart köşeli parantez içinde matematiksel karşılaştırma için kullanmayı sevmez (bu işaretleri dosya yönlendirme zannedebilir). Bunun yerine özel harfler kullanılır:
+
+**Sayısal Karşılaştırma Operatörleri:**
+- `-eq` (equal) : İki sayı birbirine EŞİT Mİ?
+- `-ne` (not equal) : İki sayı birbirinden FARKLI MI?
+- `-gt` (greater than) : Birinci sayı, ikincisinden BÜYÜK MÜ?
+- `-lt` (less than) : Birinci sayı, ikincisinden KÜÇÜK MÜ?
+- `-ge` (greater or equal) : BÜYÜK veya EŞİT Mİ?
+- `-le` (less or equal) : KÜÇÜK veya EŞİT Mİ?
+
+```bash
+read -p "Bir sayı girin: " sayi
+if [ "$sayi" -gt 10 ]; then
+    echo "Sayı 10'dan büyüktür."
+elif [ "$sayi" -eq 10 ]; then
+    echo "Sayı tam olarak 10'dur."
+else
+    echo "Sayı 10'dan küçüktür."
+fi
+```
+
+**Dosya (File) Kontrolleri:**
+Bir dosyanın ya da dizinin var olup olmadığına göre işlem yapmak, yedekleme scriptlerinin temelidir.
+- `-e dosyayolu` (exists) : Dosya veya dizin VAR MI?
+- `-f dosyayolu` (file) : Sadece dosya VAR MI? (Dizin ise false döner)
+- `-d dosyayolu` (directory) : Sadece dizin VAR MI?
+- `-r`, `-w`, `-x` : Okuma, yazma veya çalıştırma izinlerine sahip mi?
+```bash
+read -p "Kontrol edilecek dosyanın yolunu girin: " dosya
+if [ -e "$dosya" ]; then
+    echo "Dosya veya dizin sistemde mevcut."
+else
+    echo "Böyle bir dosya yok."
+fi
+```
+
+**Metin (String) Karşılaştırmaları:**
+Metinlerde `>` `<` yerine direkt eşittir kullanılır.
+- `=` (veya `==`) : İki metin tamamen AYNI MI?
+- `!=` : İki metin birbirinden FARKLI MI?
+- `-z string` (zero) : Metnin uzunluğu SIFIR MI? (İçi boş mu?)
+- `-n string` (not zero): Metnin uzunluğu SIFIR DEĞİL Mİ? (İçi dolu mu?)
+
+```bash
+read -p "Şifre: " kelime
+if [ "$kelime" = "gizli123" ]; then
+    echo "Giriş başarılı!"
+fi
+```
+
+### 6.3 Mantıksal Operatörler (AND / OR)
+Birden fazla koşulu aynı anda kontrol etmek istediğimizde kullanılırlar.
+- `&&` (ve) : Her iki koşulun da doğru olması zorunludur.
+- `||` (veya) : Koşullardan sadece birinin doğru olması yeterlidir.
+
+```bash
+if [ "$sayi" -gt 0 ] && [ "$sayi" -lt 100 ]; then
+    echo "Sayı 0 ile 100 arasındadır."
+fi
+```
+
+### 6.4 Çift Köşeli Parantez `[[ ]]` Kullanımı
+Tek köşeli parantez `[ ]` geleneksel yapıdır (aslında arkaplanda `test` komutunun alias'ıdır).
+Bash'in gelişmiş versiyonu olan Çift köşeli parantez `[[ ]]` daha güvenli, esnek ve gelişmiştir.
+- İçerisinde kelimeleri birleştirmeden/bölmeden kontrol edebilir.
+- Gelişmiş pattern matching (regex desteği) sunar.
+- Metin karşılaştırmalarında doğrudan `==` kullanabilirsiniz.
+
+---
+
+## BÖLÜM 7: DÖNGÜLER (LOOPS)
+
+Tekrar eden görevleri manuel yazmak yerine, belirli bir liste bitene kadar veya belirli bir koşul geçerliliğini yitirene kadar komutları çalıştıran yapılardır.
+
+### 7.1 while Döngüsü
+Belirli bir koşul doğru (true) olduğu sürece do ile done arasındaki komutları sürekli tekrar çalıştırır. Koşul yanlış (false) olduğunda döngü sonlanır.
+
+**Temel while yapısı:**
+```bash
+sayi=1
+while [ $sayi -le 5 ]; do
+    echo "Sayı: $sayi"
+    sayi=$((sayi + 1))  # Döngünün sonsuza girmemesi için sayıyı artırıyoruz.
+done
+```
+
+**Kullanıcı girdisine bağlı döngü:**
+```bash
+sifre="1234"
+giris=""
+while [ "$giris" != "$sifre" ]; do
+    read -p "Şifreyi girin: " giris
+    if [ "$giris" != "$sifre" ]; then
+        echo "Hatalı şifre, tekrar deneyin!"
+    fi
+done
+echo "Doğru şifre girildi, sisteme hoşgeldiniz."
+```
+
+**Sonsuz Döngü (Infinite Loop):**
+Koşul olarak `true` veya `:` verilirse döngü asla bitmez. Arka planda servislerin ayakta durup durmadığını izleyen scriptler genellikle bu yapıyı kullanır.
+```bash
+while true; do
+    echo "Sistemi izliyorum..."
+    sleep 5 # 5 saniye beklet (işlemciyi %100 kullanmasını engeller)
+done
+```
+
+### 7.2 for Döngüsü
+for döngüsü, belirli bir liste, aralık veya dizindeki dosyalar üzerinde sırasıyla gezinmek için mükemmeldir.
+
+**Kelime listesi (Liste) üzerinde döngü:**
+```bash
+for isim in Ahmet Ayşe Mehmet; do
+    echo "Öğrenci adı: $isim"
+done
+```
+
+**Sayı aralığı üzerinde döngü (`seq` ile):**
+```bash
+for sayi in $(seq 1 5); do
+    echo "İşlem adım numarası: $sayi"
+done
+```
+*(Alternatif olarak bash'e özel `{1..5}` yazımı da kullanılabilir.)*
+
+**Diziler (Arrays) üzerinde döngü:**
+```bash
+isimler=("Ali" "Veli" "Ayşe")
+for isim in "${isimler[@]}"; do
+    echo "Dizideki İsim: $isim"
+done
+```
+
+**Dosya Sistemi Üzerinde (Dosya/Klasör) Döngü:**
+Dizin içindeki tüm dosyalara tek tek işlem uygulamak (örneğin uzantılarını değiştirmek) için kullanılır.
+```bash
+for dosya in /var/log/*.log; do
+    echo "Bulunan log dosyası: $dosya"
+done
+```
+
+**Bir Komutun Çıktısı Üzerinde Döngü:**
+Bir komut çalıştırıp onun satır satır çıktılarını işlemek.
+```bash
+for dosya in $(ls /home/kullanici); do
+    echo "Ev dizinindeki dosya: $dosya"
+done
+```
+
+### 7.3 break ve continue Komutları (Döngü Kontrolü)
+- `break` : O anki duruma bakılmaksızın, döngüyü tamamen iptal eder ve sonlandırır.
+- `continue` : Döngüyü tamamen sonlandırmaz, sadece o anki işlenen turu (adımı) atlar ve bir sonraki turla döngüye devam eder.
+
+```bash
+for sayi in {1..10}; do
+    if [ $sayi -eq 5 ]; then
+        echo "5 numarayı atlıyoruz..."
+        continue
+    fi
+    
+    if [ $sayi -eq 8 ]; then
+        echo "8 numaraya ulaşıldı, döngü tamamen iptal!"
+        break
+    fi
+    
+    echo "Aktif sayı: $sayi"
+done
+```
+
+---
+
+## BÖLÜM 8: FONKSİYONLAR (FUNCTIONS)
+
+Yüzlerce satırlık bir script yazarken, bazı işlemleri (örneğin log yazdırma, hata kontrolü, veritabanı yedeği alma) kodun içerisinde 10 farklı yerde yapmak zorunda kalabilirsiniz. Aynı kodları kopyala-yapıştır yapmak yerine, bu işlemleri bir bloğun içine alıp o bloğa bir isim verirsiniz. Bu bloklara "Fonksiyon" denir.
+
+### 8.1 Fonksiyon Tanımlama ve Kullanımı
+Fonksiyon tanımlamak için `function` anahtar kelimesi kullanılabileceği gibi kullanılmasa da olur.
+
+```bash
+# Tanımlama şekli 1:
+function merhaba_de() {
+    echo "Bu bir fonksiyondur."
+}
+
+# Tanımlama şekli 2:
+merhaba_de() {
+    echo "Bu da bir fonksiyondur."
+}
+
+# Fonksiyonu çalıştırmak için sadece adını yazarız:
+merhaba_de
+```
+*(Önemli Kural: Bir fonksiyon çağrılmadan ÖNCE mutlaka tanımlanmış (script'in üst satırlarında yazılmış) olmalıdır. Aksi halde bash 'command not found' hatası verir.)*
+
+### 8.2 Fonksiyonlara Parametre Göndermek
+Fonksiyonlara, sanki dışarıdan çalışan ayrı bir bash scriptmiş gibi parametre gönderebilirsiniz. İçeride bu parametreleri `$1, $2` şeklinde alırsınız.
+
+```bash
+topla() {
+    local ilk_sayi=$1
+    local ikinci_sayi=$2
+    local sonuc=$((ilk_sayi + ikinci_sayi))
+    echo "İşlem sonucu: $sonuc"
+}
+
+# Fonksiyonu 15 ve 30 sayılarıyla çağırıyoruz
+topla 15 30
+```
+
+### 8.3 Fonksiyonlarda Geri Dönüş Değeri (Return) ve Hata Denetimi
+Diğer programlama dillerinin aksine, Bash fonksiyonları doğrudan sayı veya metin `return` edemezler (çıktı istiyorsanız `echo` kullanmalısınız). 
+`return` komutu sadece "Bu fonksiyon başarıyla çalıştı mı?" sorusunun cevabı olan bir hata kodu (0 ile 255 arası) döndürmek için kullanılır. 
+- `0` döndürürse "Başarılı"
+- `1` veya üstü döndürürse "Hata var" demektir.
+
+```bash
+dosya_kontrol() {
+    if [ -f "$1" ]; then
+        return 0  # Dosya var, başarılı
+    else
+        return 1  # Dosya yok, başarısız
+    fi
+}
+
+dosya_kontrol "/etc/passwd"
+
+if [ $? -eq 0 ]; then
+    echo "Kritik sistem dosyası mevcut!"
+else
+    echo "HATA: Kritik sistem dosyası bulunamadı!"
+fi
+```
+*(Gördüğünüz gibi fonksiyon çağrıldıktan hemen sonra `$?` kontrol edilerek dönen koda göre aksiyon alınmaktadır.)*
+
+### 8.4 Yerel (Local) Değişkenler
+Fonksiyon içinde tanımlanan normal değişkenler, tüm script tarafından görülür ve değiştirilebilir (Globaldir). Ancak sadece o fonksiyona has, güvenli bir değişken oluşturmak isterseniz başına `local` yazmalısınız.
+```bash
+isim="Küresel Ahmet"
+
+degistir_isim() {
+    local isim="Yerel Ayşe"
+    echo "Fonksiyon içinde: $isim" # Yerel Ayşe yazar
+}
+
+degistir_isim
+echo "Fonksiyon dışında: $isim" # Küresel Ahmet yazar, asıl değişken bozulmamıştır.
+```
+
+---
+
+## BÖLÜM 9: DEBUGGING (HATA AYIKLAMA)
+
+Scriptleriniz uzun ve karmaşık hale geldiğinde (Örneğin 500 satırlık bir otomasyon betiğinde), nerede hata aldığınızı veya if koşullarının doğru çalışıp çalışmadığını bulmak imkansızlaşabilir. Bu durumlarda "Debugging" modunu açarız.
+
+### 9.1 -x Parametresi İle Adım Adım İzleme (Tracing)
+Bu parametre açıldığında, script çalışırken terminalde her bir satırın işlemeden hemen önceki, değişkenlerin değerlerinin dönüştürülmüş halini ekrana basar.
+Çalıştırırken: `bash -x script.sh` yazabilirsiniz.
+
+Veya scriptin içinden açıp kapatabilirsiniz:
+```bash
+#!/bin/bash
+
+echo "Burası normal çalışıyor."
+
+set -x  # Debug modu açıldı
+sayi=5
+if [ $sayi -eq 5 ]; then
+    echo "Sayı beştir."
+fi
+set +x  # Debug modu kapatıldı
+
+echo "Burası tekrar normal çalışıyor."
+```
+
+### 9.2 -v Parametresi İle Komutların Görüntülenmesi
+`-v` parametresi, bash'in satırları terminal ekranına okunduğu şekliyle (çıktılarını değil, ham kodunu) basmasını sağlar.
+İkisini birden kullanmak (`bash -xv script.sh`) en kapsamlı hata analizini sunar.
+
+---
+
+## BÖLÜM 10: GERÇEK DÜNYADAN SCRİPT ÖRNEKLERİ
+
+### Örnek 1: Kullanıcı Hesabı Oluşturma Scripti
+Bu script, terminalden kullanıcı adı ve bilgilerini alır, root yetkisi varsa yeni kullanıcı hesabını linux üzerinde oluşturur.
+```bash
+#!/bin/bash
+echo -e "Kullanıcı Adı Girin: "
+read username
+
+# Kullanıcının zaten sistemde var olup olmadığını kontrol et (id -u)
+if id -u "$username" > /dev/null 2>&1; then
+    echo "Hata: Bu kullanıcı adı sistemde zaten mevcut!"
+else
+    echo -e "Kullanıcının Tam Adı: "
+    read fullname
+    
+    echo -e "Şifre Belirleyin: "
+    read -s password
+    echo
+    
+    # Kullanıcı oluşturma komutu
+    useradd -c "$fullname" -m "$username" -p "$password"
+    
+    if [ $? -eq 0 ]; then
+        echo "Kullanıcı $username başarıyla oluşturuldu."
+    else
+        echo "Kullanıcı oluşturulurken bir hata meydana geldi."
+    fi
+fi
+```
+
+### Örnek 2: Otomatik Sistem Log Temizliği
+Bu script, sistemdeki eski (30 günden eski) log dosyalarını bularak sunucu diskini rahatlatmak amacıyla bunları siler.
+```bash
+#!/bin/bash
+log_dizini="/var/log/myapp"
+
+if [ ! -d "$log_dizini" ]; then
+    echo "Belirtilen log dizini bulunamadı: $log_dizini"
+    exit 1
+fi
+
+echo "30 günden eski log dosyaları temizleniyor..."
+
+# find komutu ile eski logları bularak sil (rm) komutuna (exec) iletir.
+find "$log_dizini" -type f -name "*.log" -mtime +30 -exec rm -f {} \;
+
+if [ $? -eq 0 ]; then
+    echo "Eski log dosyaları başarıyla temizlendi."
+else
+    echo "Log temizleme işlemi başarısız!"
+fi
+```
+
+### Örnek 3: Tarih Etiketli Klasör Yedekleme Scripti
+Bir dizindeki dosyaları alıp sıkıştırarak (tar) yedek klasörüne kopyalar ve dosya ismine o anki tarihi ekler.
+```bash
+#!/bin/bash
+hedef_dizin="/home/kullanici/dosyalar"
+yedek_dizini="/home/kullanici/yedekler"
+
+# Eğer yedek dizini yoksa oluştur
+if [ ! -d "$yedek_dizini" ]; then
+    mkdir -p "$yedek_dizini"
+fi
+
+# Dosya ismini tarihle oluştur (Örn: yedek_2024-05-12.tar.gz)
+yedek_adi="yedek_$(date +%Y-%m-%d).tar.gz"
+
+echo "Yedekleme başlıyor: $hedef_dizin"
+tar -czf "$yedek_dizini/$yedek_adi" "$hedef_dizin"
+
+if [ $? -eq 0 ]; then
+    echo "Yedekleme başarıyla tamamlandı. Oluşan dosya: $yedek_dizini/$yedek_adi"
+else
+    echo "HATA: Yedekleme başarısız!"
+fi
+```
+
+### Örnek 4: Sistem Kullanıcı Raporu Çıkarma
+Sistemdeki kullanıcıları bulup onların son giriş tarihlerini (`lastlog`) raporlayıp bir txt dosyasına yazar.
+```bash
+#!/bin/bash
+rapor_dosyasi="user_report.txt"
+
+echo "Kullanıcı Hesapları ve Son Giriş Zamanları" > "$rapor_dosyasi"
+echo "------------------------------------------" >> "$rapor_dosyasi"
+
+# /etc/passwd içerisinden cut ile ilk sütunu (kullanıcı adlarını) alıyoruz
+for user in $(cut -d: -f1 /etc/passwd); do
+    # awk ile çıktıyı düzgünleştiriyoruz
+    last_login=$(lastlog -u "$user" | tail -1 | awk '{print $4, $5, $6, $7}')
+    echo "Kullanıcı: $user | Son Giriş: $last_login" >> "$rapor_dosyasi"
+done
+
+echo "Kullanıcı raporu başarıyla $rapor_dosyasi dosyasına oluşturuldu."
+```
+
+---
+*Bu doküman "Creating a Bash Script", "Linux Shell Script Nedir" ve "Using and Configuring Bash" başlıklı resmi/eğitim dokümanlarından derlenerek tam teşekküllü bir kitap haline getirilmiştir.*
