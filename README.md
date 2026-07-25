@@ -1,1 +1,2 @@
-rpoje windowsun ilk dosyasıdır.
+Proje windowsun ilk dosyasıdır.
+Local eşleşti.
