@@ -1,7 +1,6 @@
 /sifreler.txt
 *.md
 !README.md
-!kel.md
 /bash_shell_scr
 /indexedit.txt
 *.xlsx
