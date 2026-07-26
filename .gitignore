@@ -1,4 +1,4 @@
 /sifreler.txt
 *.md
 !README.md
-bash_shell_scr
+/bash_shell_scr
